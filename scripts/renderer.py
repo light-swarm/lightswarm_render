@@ -30,7 +30,7 @@ class Renderer:
         self.create_displays()
 
         self.sub_pen = rospy.Subscriber('/penumbras', Penumbras, self.penumbras_callback)
-        self.sub_world = rospy.Subscriber('/world', World, self.world_callback)
+        self.sub_world = rospy.Subscriber('/world', World, self.world_callback2)
  
  
     def read_in_config(self, filename):
@@ -62,6 +62,41 @@ class Renderer:
         
     def penumbras_callback(self, penumbras):
         pass
+        
+        
+    def world_callback2(self, world):
+        rospy.loginfo('got world')
+        boid_pix = []
+        boid_colors = []
+        
+        for boid in world.boids:
+            poly = self.create_boid_poly([boid.location.y, boid.location.x], boid.theta)
+            print poly
+            boid_colors.append(boid.color)
+            poly = np.float32([ poly ]).reshape(-1,1,2)
+            print poly
+            boid_pix.append(cv2.perspectiveTransform(poly , self.homog))
+            
+        
+        self.update_image2(boid_pix, boid_colors)
+        
+        self.draw()
+        
+        
+    def create_boid_poly(self, loc, theta):
+        poly = np.array([ [loc[1]+0.5, loc[0]+0.5], 
+            [loc[1]-0.5, loc[0]+0.5],
+            [loc[1]-0.5, loc[0]-0.5],
+            [loc[1]+0.5, loc[0]-0.5] ], np.float32)
+        return poly
+        
+        
+    def update_image2(self, boid_pix, boid_colors):
+        for i in range(len(boid_pix)):
+            #color = boid_colors[i]
+            poly = np.int32(boid_pix[i]).reshape(1,-1,2)
+            print poly
+            cv2.fillConvexPoly(self.image, np.fliplr(poly[0]), [255, 0, 0])
         
         
     def world_callback(self, world):
@@ -100,6 +135,7 @@ class Renderer:
                 [loc[1]-5, loc[0]+5],
                 [loc[1]-5, loc[0]-5],
                 [loc[1]+5, loc[0]-5] ], np.int32)
+            print poly
             cv2.fillConvexPoly(self.image, poly, [255, 0, 0])
 
         
