@@ -52,16 +52,18 @@ class Renderer:
         
         
     def create_displays(self):
-        #cv2.namedWindow('proj_1', cv2.WINDOW_NORMAL)
+        cv2.namedWindow('proj_1', cv2.WINDOW_NORMAL)
         #cv2.setWindowProperty('proj_1', cv2.WND_PROP_FULLSCREEN, cv.CV_WINDOW_FULLSCREEN)
-        self.image = np.ones([self.proj_res[1], self.proj_res[0], 3], np.uint8)
-        self.image *= 255;
-        #cv2.imshow('proj_1', self.image)
-        #cv2.waitKey(30)
+        self.reset_image()
+        cv2.imshow('proj_1', self.image)
+        cv2.waitKey(30)
+        
+    def reset_image(self):
+        self.image = np.zeros([self.proj_res[1], self.proj_res[0], 3], np.uint8)
 
         
     def penumbras_callback(self, penumbras):
-        pass
+        
         
         
     def world_callback2(self, world):
@@ -71,10 +73,8 @@ class Renderer:
         
         for boid in world.boids:
             poly = self.create_boid_poly([boid.location.y, boid.location.x], boid.theta)
-            print poly
             boid_colors.append(boid.color)
             poly = np.float32([ poly ]).reshape(-1,1,2)
-            print poly
             boid_pix.append(cv2.perspectiveTransform(poly , self.homog))
             
         
@@ -84,19 +84,30 @@ class Renderer:
         
         
     def create_boid_poly(self, loc, theta):
-        poly = np.array([ [loc[1]+0.5, loc[0]+0.5], 
-            [loc[1]-0.5, loc[0]+0.5],
-            [loc[1]-0.5, loc[0]-0.5],
-            [loc[1]+0.5, loc[0]-0.5] ], np.float32)
+        theta *= np.pi/180
+        y = np.cos(theta)
+        x = np.sin(theta)
+        
+        poly = np.array([ [loc[1]+y, loc[0]+x], 
+            [loc[1]-y+0.5*x, loc[0]-x-0.5*y],
+            [loc[1]-y-0.5*x, loc[0]-x+0.5*y]], np.float32)
         return poly
         
         
     def update_image2(self, boid_pix, boid_colors):
+        self.reset_image()
         for i in range(len(boid_pix)):
             #color = boid_colors[i]
             poly = np.int32(boid_pix[i]).reshape(1,-1,2)
-            print poly
-            cv2.fillConvexPoly(self.image, np.fliplr(poly[0]), [255, 0, 0])
+            cv2.fillConvexPoly(self.image, np.fliplr(poly[0]), [255, 255, 255])
+
+
+        
+    def draw(self):
+        #cv2.namedWindow('proj_1', cv2.WINDOW_NORMAL)
+        #cv2.setWindowProperty('proj_1', cv2.WND_PROP_FULLSCREEN, cv.CV_WINDOW_FULLSCREEN)
+        cv2.imshow('proj_1', self.image)
+        a = cv2.waitKey(30)
         
         
     def world_callback(self, world):
@@ -139,13 +150,6 @@ class Renderer:
             cv2.fillConvexPoly(self.image, poly, [255, 0, 0])
 
         
-        
-        
-    def draw(self):
-        cv2.namedWindow('proj_1', cv2.WINDOW_NORMAL)
-        cv2.setWindowProperty('proj_1', cv2.WND_PROP_FULLSCREEN, cv.CV_WINDOW_FULLSCREEN)
-        cv2.imshow('proj_1', self.image)
-        cv2.waitKey(30)
 
 
     def test(self):
