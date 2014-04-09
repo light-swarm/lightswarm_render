@@ -125,6 +125,7 @@ class Renderer:
 
     def draw(self):
         combined_image = self.combine_image(self.image[0], self.image[1])
+        combined_image = self.combine_image(combined_image, self.image[1])
         self.display.draw(combined_image)
             
     def combine_image(self, image1, image2):
