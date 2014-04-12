@@ -6,7 +6,7 @@ import cv2.cv as cv
 import numpy as np
 import yaml
 
-import shape
+import shapely
 from shapely.geometry import Polygon as ShpPolygon
 from shapely.geometry import MultiPolygon as ShpMultiPolygon
 from shapely.geometry import Point as ShpPoint
@@ -35,7 +35,7 @@ class Renderer:
         self.calc_resp([])
         self.create_displays2(fullscreen)
 
-        self.sub_pen = rospy.Subscriber('/penumbras', Penumbras, self.penumbras_callback2)
+        self.sub_pen = rospy.Subscriber('/penumbras', Penumbras, self.penumbras_callback2, queue_size = 1)
         self.sub_world = rospy.Subscriber('/world', World, self.world_callback2, queue_size = 1)
  
  
@@ -117,12 +117,12 @@ class Renderer:
         
     def create_boid_poly(self, loc, theta):
         theta *= np.pi/180
-        y = np.cos(theta)
-        x = np.sin(theta)
+        x = np.cos(theta)
+        y = np.sin(theta)
         
-        poly = np.array([ [loc[1]+y, loc[0]+x], 
-            [loc[1]-y+0.5*x, loc[0]-x-0.5*y],
-            [loc[1]-y-0.5*x, loc[0]-x+0.5*y]], np.float32)
+        poly = np.array([ [loc[0]+y, loc[1]+x], 
+            [loc[0]-y+0.5*x, loc[1]-x-0.5*y],
+            [loc[0]-y-0.5*x, loc[1]-x+0.5*y]], np.float32)
         return poly
         
         
