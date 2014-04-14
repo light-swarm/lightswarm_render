@@ -79,7 +79,7 @@ class Renderer:
     def penumbras_callback2(self, penumbras): #update images with new responsibilities for projectors
         rospy.loginfo('got new shadows')
         self.calc_resp(penumbras.projector_shadows)
-        self.update_image2()
+        #self.update_image2()
 
     
     
