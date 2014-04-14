@@ -6,7 +6,7 @@ import cv2.cv as cv
 class Display:
 
     def setup(self, fullscreen):       
-        cv2.namedWindow('proj_0', cv2.WINDOW_NORMAL)
+        cv2.namedWindow('proj_0', cv2.WINDOW_OPENGL)
         if fullscreen:
             cv2.setWindowProperty('proj_0', cv2.WND_PROP_FULLSCREEN, cv.CV_WINDOW_FULLSCREEN)
         
