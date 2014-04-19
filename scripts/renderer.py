@@ -63,7 +63,7 @@ class Renderer:
 
 
     def create_displays2(self, fullscreen): #create display objects for each projector image
-        self.reset_image()
+        self.create_images()
         self.shadows = []
         
         self.display = Display()
@@ -71,10 +71,14 @@ class Renderer:
         self.draw()
         
         
-    def reset_image(self): #reset internal image for projectors
+    def create_images(self): #reset internal image for projectors
         self.image = []
         for i in range(self.num_proj):
             self.image.append(np.zeros([self.proj_res[1], self.proj_res[0], 3], np.uint8))
+            
+    def reset_image(self): #reset internal image for projectors
+        for i in range(self.num_proj):
+            self.image[i] = np.zeros([self.proj_res[1], self.proj_res[0], 3], np.uint8)
 
         
     def penumbras_callback2(self, penumbras): #update images with new responsibilities for projectors
