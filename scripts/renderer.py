@@ -30,6 +30,7 @@ class Renderer:
         
         config_fname = rospy.get_param('config_file', CONFIG_FILENAME)
         fullscreen = rospy.get_param('~fullscreen', False)
+        self.debug_mode = rospy.get_param('~render_debug_mode', True)
         self.read_in_config(config_fname)
         self.create_homograpy()
         self.calc_resp([])
@@ -129,31 +130,43 @@ class Renderer:
     def update_image2(self): #updates images with boid locations and responsibility vectors
         self.reset_image()
         
-        for boid in self.world.boids:
-            poly = self.create_boid_poly([boid.location.y, boid.location.x], boid.theta)#create boid polygon in world coord
-            
-            #figure out which projector owns it
-            proj_own = -1
-            for i in range(self.num_proj):
-                if self.resp[i].contains(ShpPoint(boid.location.y, boid.location.x)):
-                    proj_own = i
-                    break
-                    
-            #transform to proj coordinates
-            if (proj_own >= 0):
+        if (self.debug_mode):
+            debug_colors = [[255, 50, 50], [50, 255, 50], [50, 50, 255]]
+            for boid in self.world.boids:
+                poly = self.create_boid_poly([boid.location.y, boid.location.x], boid.theta)#create boid polygon in world coord
                 poly = np.float32([ poly ]).reshape(-1,1,2)
-                boid_pix = cv2.perspectiveTransform(poly, self.homog[proj_own])            
-                boid_pix = np.int32(boid_pix).reshape(1,-1,2)
-                cv2.fillConvexPoly(self.image[proj_own], np.fliplr(boid_pix[0]), boid.color)
+                
+                for i in range(self.num_proj):
+                    boid_pix = cv2.perspectiveTransform(poly, self.homog[i])            
+                    boid_pix = np.int32(boid_pix).reshape(1,-1,2)
+                    cv2.fillConvexPoly(self.image[i], np.fliplr(boid_pix[0]), debug_colors[i])
+
+        else:
+            for boid in self.world.boids:
+                poly = self.create_boid_poly([boid.location.y, boid.location.x], boid.theta)#create boid polygon in world coord
+                
+                #figure out which projector owns it
+                proj_own = -1
+                for i in range(self.num_proj):
+                    if self.resp[i].contains(ShpPoint(boid.location.y, boid.location.x)):
+                        proj_own = i
+                        break
+                        
+                #transform to proj coordinates
+                if (proj_own >= 0):
+                    poly = np.float32([ poly ]).reshape(-1,1,2)
+                    boid_pix = cv2.perspectiveTransform(poly, self.homog[proj_own])            
+                    boid_pix = np.int32(boid_pix).reshape(1,-1,2)
+                    cv2.fillConvexPoly(self.image[proj_own], np.fliplr(boid_pix[0]), boid.color)
 
         self.draw()
 
     def draw(self):
-        combined_image = self.combine_image(self.image[0], self.image[1])
+        combined_image = self.combine_image(self.image[0], self.image[1], self.image[2])
         self.display.draw(combined_image)
             
-    def combine_image(self, image1, image2):
-        return np.hstack((image1, image2))
+    def combine_image(self, image1, image2, image3):
+        return np.hstack((image1, image2, image3))
 
 
 def main():
