@@ -29,8 +29,8 @@ class Renderer:
         self.proj_id_2idx = {'first':0, 'second':1, 'third':2, 'fourth':3}
         
         config_fname = rospy.get_param('config_file', CONFIG_FILENAME)
-        fullscreen = rospy.get_param('~fullscreen', False)
-        self.debug_mode = rospy.get_param('~render_debug_mode', True)
+        fullscreen = rospy.get_param('~fullscreen', True)
+        self.debug_mode = rospy.get_param('~render_debug_mode', False)
         self.read_in_config(config_fname)
         self.create_homograpy()
         self.calc_resp([])
@@ -121,15 +121,19 @@ class Renderer:
         
         
     def create_boid_poly(self, loc, theta):
-        theta *= np.pi/180
-        x = np.cos(theta)
-        y = np.sin(theta)
         
-        poly = np.array([ [loc[0]+y, loc[1]+x], 
-            [loc[0]-y+0.5*x, loc[1]-x-0.5*y],
-            [loc[0]-y-0.5*x, loc[1]-x+0.5*y]], np.float32)
+        R = 1.0 #head radius
+        t2h_ratio = 2.0 #tail to head ratio x:1
+        
+        boid_points = [[t2h_ratio*R, 180.0], [R, -90.0], [R, -45.0], [R, 0.0], [R, 45.0], [R, 90.0]]
+        poly = []
+        
+        for r, phi in boid_points:
+            poly.append([loc[0] + r*np.sin((theta + phi) * np.pi/180), 
+                         loc[1] + r*np.cos((theta + phi) * np.pi/180)])
+        
         return poly
-        
+
         
     def update_image2(self): #updates images with boid locations and responsibility vectors
         self.reset_image()
@@ -138,6 +142,7 @@ class Renderer:
             debug_colors = [[255, 50, 50], [50, 255, 50], [50, 50, 255]]
             for boid in self.world.boids:
                 poly = self.create_boid_poly([boid.location.y, boid.location.x], boid.theta)#create boid polygon in world coord
+                #print poly
                 poly = np.float32([ poly ]).reshape(-1,1,2)
                 
                 for i in range(self.num_proj):
@@ -166,11 +171,11 @@ class Renderer:
         self.draw()
 
     def draw(self):
-        combined_image = self.combine_image(self.image[0], self.image[1], self.image[2])
+        combined_image = self.combine_image(self.image)
         self.display.draw(combined_image)
             
-    def combine_image(self, image1, image2, image3):
-        return np.hstack((image1, image2, image3))
+    def combine_image(self, images):
+        return np.hstack(images)
 
 
 def main():
